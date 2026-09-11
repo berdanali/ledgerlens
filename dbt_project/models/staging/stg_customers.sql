@@ -5,8 +5,9 @@
 with raw as (
     select *
     from read_parquet(
-        's3://{{ var("landing_bucket") }}/customers/**/*.parquet',
-        hive_partitioning = true
+        '{{ var("landing_base_url") }}/customers/**/*.parquet',
+        hive_partitioning = true,
+        union_by_name = true
     )
 ),
 

@@ -5,8 +5,9 @@
 with raw as (
     select *
     from read_parquet(
-        's3://{{ var("landing_bucket") }}/accounts/**/*.parquet',
-        hive_partitioning = true
+        '{{ var("landing_base_url") }}/accounts/**/*.parquet',
+        hive_partitioning = true,
+        union_by_name = true
     )
 ),
 
@@ -26,7 +27,7 @@ select
     account_number  as account_number_token,
     account_type,
     currency,
-    balance,
+    balance::DECIMAL(18,2) as balance,
     status,
     created_at,
     updated_at,

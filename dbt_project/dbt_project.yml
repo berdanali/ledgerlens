@@ -11,8 +11,10 @@ target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
 vars:
-  # Override with MINIO_BUCKET env var when the default bucket name changes
-  landing_bucket: "{{ env_var('MINIO_BUCKET', 'ledgerlens-landing') }}"
+  # Full base URL for the landing zone.
+  # S3/MinIO (default, requires httpfs):  s3://ledgerlens-landing
+  # Local cache (Windows / no httpfs):    landing_cache
+  landing_base_url: "s3://{{ env_var('MINIO_BUCKET', 'ledgerlens-landing') }}"
 
 models:
   ledgerlens:

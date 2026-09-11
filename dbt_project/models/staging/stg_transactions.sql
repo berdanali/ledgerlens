@@ -5,8 +5,9 @@
 with raw as (
     select *
     from read_parquet(
-        's3://{{ var("landing_bucket") }}/transactions/**/*.parquet',
-        hive_partitioning = true
+        '{{ var("landing_base_url") }}/transactions/**/*.parquet',
+        hive_partitioning = true,
+        union_by_name = true
     )
 ),
 
@@ -35,7 +36,7 @@ select
     transaction_id,
     from_account_id,
     to_account_id,
-    amount,
+    amount::DECIMAL(18,2) as amount,
     currency,
     transaction_type,
     status,
