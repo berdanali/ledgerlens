@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: int_txn_features
+    description: >
+      Grain: one row per COMPLETED transaction.
+      Pre-computes window-based features (burst count, amount z-score components,
+      daily activity) used by anomaly detection rules. Not intended for direct
+      analytics use — consumed only by mart_suspicious_transactions.
+    columns:
+      - name: transaction_id
+        description: "FK to fact_transactions.transaction_id."
+        tests: [not_null]
+      - name: from_account_id
+        description: "Source account for the transaction."
+        tests: [not_null]
+      - name: transfers_in_2h_window
+        description: >
+          Count of completed TRANSFERs from the same account in the 2-hour
+          window ending at (and including) this transaction's created_at.
+          Zero for non-TRANSFER transactions.
+        tests: [not_null]
+      - name: acct_mean_amount
+        description: "All-time mean completed transaction amount for the source account."
+        tests: [not_null]
+      - name: txns_on_same_day
+        description: "Count of completed transactions from this account on the same calendar day."
+        tests: [not_null]
+      - name: avg_daily_txns
+        description: "Average completed transactions per active day across full history."
+        tests: [not_null]
+
+  - name: mart_suspicious_transactions
+    description: >
+      Grain: one row per (transaction_id, rule_code).
+      A transaction triggering multiple rules generates one row per rule.
+      Three rules are implemented: BURST_TRANSFER, HIGH_VALUE_OUTLIER, DORMANT_SPIKE.
+      rule_score interpretation varies by rule (see model docstring).
+    columns:
+      - name: flag_sk
+        description: "Surrogate key — md5(transaction_id || '|' || rule_code)."
+        tests: [unique, not_null]
+      - name: transaction_id
+        description: "FK to fact_transactions.transaction_id."
+        tests: [not_null]
+      - name: rule_code
+        description: "Anomaly rule that fired for this row."
+        tests:
+          - not_null
+          - accepted_values:
+              config:
+                severity: error
+              values: [BURST_TRANSFER, HIGH_VALUE_OUTLIER, DORMANT_SPIKE]
+      - name: rule_score
+        description: "Rule-specific numeric score. Higher = more anomalous."
+        tests: [not_null]
+      - name: rule_description
+        description: "Human-readable explanation of why this rule fired."
+        tests: [not_null]
+      - name: from_account_id
+        tests: [not_null]
+      - name: amount
+        tests: [not_null]
+      - name: created_at
+        tests: [not_null]
+      - name: flagged_at
+        description: "Timestamp when dbt populated this row."
+        tests: [not_null]

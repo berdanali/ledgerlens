@@ -121,7 +121,14 @@ _(Update this section as work progresses — replace with current state.)_
     bakiyeyi verir, CDC ile tüm değişim geçmişi saklanır. Mülakatta bunu dim_accounts üzerinden anlatacağız.
   - dim_customers: SCD Type 1 (en son durum) — kişisel veri saklama süresini kısaltmak için bilinçli tercih
   - dbt run: manuel (Phase 7'de Airflow üstlenecek)
-- [ ] Phase 6 — Anomaly detection layer
+- [x] Phase 6 — Anomaly detection layer (rule-based SQL, dbt models in models/anomaly/)
+  - Approach: 3 SQL rules in dbt — BURST_TRANSFER (≥5 transfers in 2h window),
+    HIGH_VALUE_OUTLIER (amount > 4× mean + 2× stddev), DORMANT_SPIKE (same-day count ≥ 5 AND ≥ 3× daily avg)
+  - WHY rule-based over ML: AutoPulse (sibling portfolio project) already demonstrates ML/W&B;
+    using explainable SQL rules here is intentional — in fintech/BaFin context the compliance
+    question "why is this transaction suspicious?" requires a reproducible, auditable answer,
+    not a black-box score. Rule-based detection is also the industry standard first layer
+    (ML is typically a second-pass signal enrichment, not the primary gate).
 - [ ] Phase 7 — Airflow orchestration
 - [ ] Phase 8 — GDPR/BaFin retention design
 - [ ] Phase 9 — README + architecture diagram + interview notes
