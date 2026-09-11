@@ -1,0 +1,4 @@
+confluent-kafka[avro,schemaregistry]>=2.3.0,<3
+pyarrow>=14.0.0,<18
+boto3>=1.34.0,<2
+pydantic>=2.5.0,<3
