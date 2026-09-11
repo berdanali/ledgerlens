@@ -106,6 +106,42 @@ Adjust this structure as the project develops, but keep it in sync with what act
 - Design for GDPR "right to erasure": since CDC captures an immutable event history, decide explicitly (and document the decision) how a deletion request propagates through Kafka topics, the landing zone, and dbt marts. This is a known hard problem in event-sourced systems — the point of this project is to show you've reasoned about it, not necessarily to solve it perfectly.
 - Document data retention periods per layer (raw landing zone vs. marts) as if a compliance officer would ask.
 
+### Retention Periods (Phase 8 decision)
+
+| Layer | Prefix / Topic | Retention | Basis |
+|---|---|---|---|
+| Kafka | ledgerlens.public.transactions | 7 years | BaFin §257 HGB |
+| Kafka | ledgerlens.public.accounts | 7 years | BaFin §257 HGB |
+| Kafka | ledgerlens.public.customers | 90 days | GDPR Art. 5(1)(e) |
+| MinIO landing zone | transactions/ | 7 years | BaFin §257 HGB |
+| MinIO landing zone | accounts/ | 7 years | BaFin §257 HGB |
+| MinIO landing zone | customers/ | 90 days | GDPR Art. 5(1)(e) |
+| dbt marts (DuckDB) | all models | follows source | derived layer |
+
+### GDPR Right to Erasure — Design Decision
+
+**Current state:** A single global PSEUDONYM_SALT hashes all PII. On a GDPR erasure request:
+1. Delete customer row from PostgreSQL → Debezium emits `op='d'` → `stg_customers` filters it → customer disappears from `dim_customers`. ✓
+2. Kafka topics and MinIO Parquet files retain pseudonymized tokens until TTL (90 days for customers). ✓
+3. Tokens are reversible as long as PSEUDONYM_SALT exists → technically still personal data during that window. ⚠
+
+**Production path — crypto-shredding:**
+Move from one global salt to a **per-customer salt** in a dedicated key store:
+
+```sql
+CREATE TABLE customer_keys (
+    customer_id  UUID PRIMARY KEY,
+    pseudonym_salt TEXT NOT NULL,   -- unique per customer
+    created_at   TIMESTAMPTZ DEFAULT now()
+);
+```
+
+`pseudonymizer.py` evolution: replace the global `salt` argument with a key-store lookup by `customer_id`. On erasure: `DELETE FROM customer_keys WHERE customer_id = ?`.
+
+After key deletion the Parquet/Kafka tokens for that customer are permanently unlinkable — the files can remain (they no longer constitute personal data without the key), so the 90-day TTL becomes a formality rather than a compliance requirement. This is the standard fintech approach to GDPR in event-sourced systems.
+
+**Why not implemented in full:** Per-customer key lookup adds a round-trip to the consumer's hot path per message. The current architecture demonstrates the pseudonymization pattern correctly; the key store is a clear next iteration, not a gap in reasoning.
+
 ## 9. Status
 
 _(Update this section as work progresses — replace with current state.)_
@@ -134,7 +170,10 @@ _(Update this section as work progresses — replace with current state.)_
   - DAG: ledgerlens_dbt — `dbt_run → dbt_test`, @hourly, on_failure_callback logs structured ERROR
   - docker profile in profiles.yml uses httpfs directly to MinIO (Linux container, no Smart App Control)
   - DuckDB file for docker target: /opt/airflow/ledgerlens.duckdb (airflow_data volume, separate from dev target to avoid write-lock contention)
-- [ ] Phase 8 — GDPR/BaFin retention design
+- [x] Phase 8 — GDPR/BaFin retention design
+  - gdpr/configure_retention.py: sets Kafka retention.ms + MinIO S3 lifecycle rules (idempotent)
+  - Retention: transactions/accounts = 7 years (BaFin §257 HGB), customers = 90 days (GDPR)
+  - Erasure design: current global salt → crypto-shredding path documented in §8 above
 - [ ] Phase 9 — README + architecture diagram + interview notes
 
 ## 10. Non-Goals
