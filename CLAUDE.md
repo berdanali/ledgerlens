@@ -95,6 +95,7 @@ Adjust this structure as the project develops, but keep it in sync with what act
 1. Work module by module, in the phase order defined in the kickoff prompt (architecture → OLTP seed → CDC → landing zone → dbt → anomaly detection → Airflow → GDPR/retention → docs). Do not jump ahead without explicit go-ahead.
 2. Before writing code for a new module, present 2–3 viable approaches with trade-offs and wait for a decision. Do not pick silently on anything with a real trade-off (e.g. CDC tool choice, file format, retry strategy).
 3. After finishing a module, list 2–3 questions a senior data engineer or hiring manager might ask about it — this project doubles as interview prep.
+3a. After the interview questions, always include a "Senin Yapman Gerekenler" (Your Action Items) section: a numbered checklist of every command the user must run manually (docker compose, pip install, migrations, etc.) and anything they need to verify or edit by hand. One concrete command or check per item — no vague instructions.
 4. When modifying existing files, show only the changed functions/classes/lines (`# ... existing code ...` for the rest) — never repeat a whole file unless explicitly asked.
 5. Commit after each completed module with a clear, conventional message. Never batch multiple unrelated changes into one commit.
 6. Update this file's "Status" section (below) at the end of a session or phase — future sessions depend on it being accurate.
