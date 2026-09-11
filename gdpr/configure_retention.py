@@ -169,7 +169,24 @@ def _apply_minio_lifecycle(
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _load_dotenv() -> None:
+    """Load .env from the project root (parent of this file's directory)."""
+    env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    env_path = os.path.normpath(env_path)
+    if not os.path.exists(env_path):
+        return
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
+
+
 def main() -> None:
+    _load_dotenv()
+
     bootstrap = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
     endpoint  = os.environ.get("MINIO_ENDPOINT_URL", "http://localhost:9000")
     access    = os.environ.get("MINIO_ROOT_USER", "minioadmin")
