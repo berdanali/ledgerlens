@@ -200,7 +200,7 @@ services:
       - ./airflow/dags:/opt/airflow/dags:ro
       - ./dbt_project:/opt/airflow/dbt_project
     ports:
-      - "8080:8080"
+      - "8088:8080"
     command: standalone
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
