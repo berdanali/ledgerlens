@@ -174,7 +174,9 @@ _(Update this section as work progresses — replace with current state.)_
   - gdpr/configure_retention.py: sets Kafka retention.ms + MinIO S3 lifecycle rules (idempotent)
   - Retention: transactions/accounts = 7 years (BaFin §257 HGB), customers = 90 days (GDPR)
   - Erasure design: current global salt → crypto-shredding path documented in §8 above
-- [ ] Phase 9 — README + architecture diagram + interview notes
+- [x] Phase 9 — README + architecture diagram + interview notes
+  - README.md: Mermaid architecture diagram, tech stack table, quick start, 5 key design decisions, compliance table
+  - docs/interview_prep.md: 18 Q&A across 7 topics (CDC, storage, dbt, anomaly, Airflow, GDPR, scaling)
 
 ## 10. Non-Goals
 
