@@ -112,7 +112,7 @@ _(Update this section as work progresses — replace with current state.)_
 
 - [x] Phase 1 — Architecture design (decisions: Python consumer, SHA-256 pseudonymization, DuckDB lakehouse)
 - [x] Phase 2 — Synthetic OLTP schema + seed generator (3 tables, CDC-ready, realistic distributions)
-- [ ] Phase 3 — Debezium/Kafka Connect CDC pipeline
+- [x] Phase 3 — Debezium/Kafka Connect CDC pipeline (Confluent 7.7, Avro, 3 tables, pgoutput)
 - [ ] Phase 4 — Landing zone ingestion
 - [ ] Phase 5 — dbt staging/intermediate/marts + tests
 - [ ] Phase 6 — Anomaly detection layer
