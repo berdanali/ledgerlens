@@ -129,7 +129,11 @@ _(Update this section as work progresses — replace with current state.)_
     question "why is this transaction suspicious?" requires a reproducible, auditable answer,
     not a black-box score. Rule-based detection is also the industry standard first layer
     (ML is typically a second-pass signal enrichment, not the primary gate).
-- [ ] Phase 7 — Airflow orchestration
+- [x] Phase 7 — Airflow orchestration
+  - Single-container `airflow standalone` (SequentialExecutor + SQLite) — right-sized for local portfolio demo
+  - DAG: ledgerlens_dbt — `dbt_run → dbt_test`, @hourly, on_failure_callback logs structured ERROR
+  - docker profile in profiles.yml uses httpfs directly to MinIO (Linux container, no Smart App Control)
+  - DuckDB file for docker target: /opt/airflow/ledgerlens.duckdb (airflow_data volume, separate from dev target to avoid write-lock contention)
 - [ ] Phase 8 — GDPR/BaFin retention design
 - [ ] Phase 9 — README + architecture diagram + interview notes
 

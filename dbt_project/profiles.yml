@@ -20,3 +20,19 @@ ledgerlens:
       #   s3_secret_access_key: "{{ env_var('MINIO_SECRET_KEY') }}"
       #   s3_use_ssl: false
       #   s3_url_style: path
+
+    # docker target — used by Airflow inside the Linux container.
+    # httpfs works here because Windows Smart App Control does not apply.
+    # DuckDB file lives in the airflow_data volume, separate from the
+    # dev target's file, so the two never contend for the write lock.
+    docker:
+      type: duckdb
+      path: "/opt/airflow/ledgerlens.duckdb"
+      extensions:
+        - httpfs
+      settings:
+        s3_endpoint: "minio:9000"
+        s3_access_key_id: "{{ env_var('MINIO_ROOT_USER', 'minioadmin') }}"
+        s3_secret_access_key: "{{ env_var('MINIO_ROOT_PASSWORD') }}"
+        s3_use_ssl: false
+        s3_url_style: path
