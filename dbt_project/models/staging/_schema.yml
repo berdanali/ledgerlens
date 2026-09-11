@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: >
+      Latest CDC state per customer (SCD Type 1 grain).
+      PII fields are SHA-256 tokens — raw values never leave the consumer.
+    columns:
+      - name: customer_id
+        description: "UUID primary key from the OLTP system."
+        tests: [not_null, unique]
+      - name: first_name_token
+        description: "SHA-256(salt + first_name)."
+        tests: [not_null]
+      - name: last_name_token
+        description: "SHA-256(salt + last_name)."
+        tests: [not_null]
+      - name: email_token
+        description: "SHA-256(salt + email)."
+        tests: [not_null]
+      - name: national_id_token
+        description: "SHA-256(salt + national_id)."
+        tests: [not_null]
+      - name: date_of_birth_token
+        description: "SHA-256(salt + date_of_birth)."
+        tests: [not_null]
+      - name: _cdc_op
+        description: "Debezium operation code: r=read/snapshot, c=create, u=update."
+        tests: [not_null]
+
+  - name: stg_accounts
+    description: >
+      All CDC events per account — full change history retained for SCD Type 2.
+      account_id is NOT unique here; each row is one state change event.
+    columns:
+      - name: account_id
+        description: "Account UUID — repeated across change events."
+        tests: [not_null]
+      - name: customer_id
+        description: "FK to customers."
+        tests: [not_null]
+      - name: account_number_token
+        description: "SHA-256(salt + IBAN)."
+        tests: [not_null]
+      - name: balance
+        description: "Account balance at this point in time."
+        tests: [not_null]
+      - name: status
+        description: "Account status at this point in time."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["ACTIVE", "FROZEN", "CLOSED"]
+      - name: _cdc_ts_ms
+        description: "Database transaction timestamp in milliseconds since epoch."
+        tests: [not_null]
+
+  - name: stg_transactions
+    description: >
+      One row per financial transaction — earliest CDC event only.
+      Transactions are immutable; corrections appear as REVERSED rows.
+    columns:
+      - name: transaction_id
+        description: "UUID primary key."
+        tests: [not_null, unique]
+      - name: from_account_id
+        description: "Originating account UUID."
+        tests: [not_null]
+      - name: amount
+        description: "Transaction amount — always positive."
+        tests: [not_null]
+      - name: transaction_type
+        tests:
+          - accepted_values:
+              values: ["TRANSFER", "WITHDRAWAL", "DEPOSIT", "PAYMENT"]
+      - name: status
+        tests:
+          - accepted_values:
+              values: ["COMPLETED", "PENDING", "FAILED", "REVERSED"]

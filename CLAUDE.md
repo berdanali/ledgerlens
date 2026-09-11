@@ -114,7 +114,13 @@ _(Update this section as work progresses — replace with current state.)_
 - [x] Phase 2 — Synthetic OLTP schema + seed generator (3 tables, CDC-ready, realistic distributions)
 - [x] Phase 3 — Debezium/Kafka Connect CDC pipeline (Confluent 7.7, Avro, 3 tables, pgoutput)
 - [x] Phase 4 — Landing zone ingestion (confluent-kafka, AvroDeserializer, SHA-256 PII pseudonymization, Parquet/Snappy, MinIO S3 partitioned by table/year/month/day/hour)
-- [ ] Phase 5 — dbt staging/intermediate/marts + tests
+- [x] Phase 5 — dbt staging/intermediate/marts + tests
+  - Adapter: dbt-duckdb + httpfs, reads Parquet directly from MinIO (S3 endpoint)
+  - dim_accounts: SCD Type 2 (valid_from/valid_to/is_current) — balance & status history
+    WHY: CDC'nin batch'e göre üstünlüğünü somut olarak gösterir; batch export yalnızca anlık
+    bakiyeyi verir, CDC ile tüm değişim geçmişi saklanır. Mülakatta bunu dim_accounts üzerinden anlatacağız.
+  - dim_customers: SCD Type 1 (en son durum) — kişisel veri saklama süresini kısaltmak için bilinçli tercih
+  - dbt run: manuel (Phase 7'de Airflow üstlenecek)
 - [ ] Phase 6 — Anomaly detection layer
 - [ ] Phase 7 — Airflow orchestration
 - [ ] Phase 8 — GDPR/BaFin retention design

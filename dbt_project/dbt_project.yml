@@ -1,0 +1,24 @@
+name: ledgerlens
+version: "1.0.0"
+config-version: 2
+
+profile: ledgerlens
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Override with MINIO_BUCKET env var when the default bucket name changes
+  landing_bucket: "{{ env_var('MINIO_BUCKET', 'ledgerlens-landing') }}"
+
+models:
+  ledgerlens:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table

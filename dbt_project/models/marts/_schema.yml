@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >
+      SCD Type 1 customer dimension — latest state only.
+      Type 1 is intentional: limits retained PII history, simplifying GDPR
+      right-to-erasure (one row to purge per customer).
+    columns:
+      - name: customer_id
+        description: "Natural key and primary key."
+        tests: [not_null, unique]
+      - name: first_name_token
+        tests: [not_null]
+      - name: email_token
+        tests: [not_null]
+
+  - name: dim_accounts
+    description: >
+      SCD Type 2 account dimension — full balance and status history.
+      Each row = one version of an account's state.
+      Demonstrates the core CDC advantage: a batch export would give only
+      the current balance; CDC preserves the complete change timeline.
+    columns:
+      - name: account_sk
+        description: "Surrogate key: md5(account_id, change_ts_ms)."
+        tests: [not_null, unique]
+      - name: account_id
+        description: "Natural key — repeated once per version."
+        tests: [not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: balance
+        tests: [not_null]
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["ACTIVE", "FROZEN", "CLOSED"]
+      - name: valid_from
+        description: "Timestamp when this version became active."
+        tests: [not_null]
+      - name: is_current
+        description: "True for the active version of each account."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      - name: version_number
+        description: "1-based version counter per account."
+        tests: [not_null]
+
+  - name: dim_date
+    description: "Calendar date dimension — 5-year window."
+    columns:
+      - name: date_id
+        description: "Integer surrogate key in YYYYMMDD format."
+        tests: [not_null, unique]
+      - name: date_day
+        tests: [not_null]
+
+  - name: fact_transactions
+    description: >
+      Grain: one row per financial transaction.
+      Immutable — corrections appear as separate REVERSED transactions.
+    columns:
+      - name: transaction_id
+        description: "Natural and primary key."
+        tests: [not_null, unique]
+      - name: from_account_id
+        tests: [not_null]
+      - name: amount
+        tests: [not_null]
+      - name: transaction_type
+        tests:
+          - accepted_values:
+              values: ["TRANSFER", "WITHDRAWAL", "DEPOSIT", "PAYMENT"]
+      - name: status
+        tests:
+          - accepted_values:
+              values: ["COMPLETED", "PENDING", "FAILED", "REVERSED"]
+      - name: date_id
+        description: "FK to dim_date (YYYYMMDD)."
+        tests: [not_null]

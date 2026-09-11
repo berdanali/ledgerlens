@@ -1,0 +1,19 @@
+version: 2
+
+# These are not traditional dbt sources — the landing zone is a set of
+# Parquet files on MinIO.  We reference them directly via read_parquet()
+# in staging models so DuckDB httpfs fetches them at query time.
+# Documented here for lineage visibility only.
+
+sources:
+  - name: landing_zone
+    description: >
+      Raw CDC events written by the landing zone consumer.
+      Location: s3://ledgerlens-landing/{table}/year=.../month=.../day=.../hour=.../*.parquet
+    tables:
+      - name: raw_customers
+        description: "Debezium CDC events for public.customers — PII fields are SHA-256 tokens."
+      - name: raw_accounts
+        description: "Debezium CDC events for public.accounts — account_number is a SHA-256 token."
+      - name: raw_transactions
+        description: "Debezium CDC events for public.transactions — immutable by design."

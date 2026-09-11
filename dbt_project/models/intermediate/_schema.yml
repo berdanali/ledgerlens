@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: int_account_changes
+    description: >
+      One row per meaningful state change per account (balance or status changed).
+      Intermediate step between stg_accounts and the SCD Type 2 dim_accounts mart.
+    columns:
+      - name: account_id
+        description: "Account UUID — repeated once per change event."
+        tests: [not_null]
+      - name: change_ts_ms
+        description: "Database timestamp (ms since epoch) when this change occurred."
+        tests: [not_null]
+      - name: balance
+        description: "Balance value at this version."
+        tests: [not_null]
+      - name: status
+        description: "Account status at this version."
+        tests: [not_null]
